@@ -1,37 +1,10 @@
 #include <SDL.h>
+#include "complex.h"
 
-typedef struct complexNumber complex;
-typedef struct color color;
+const int max_iterations = 256;
+const double width = 720;
+const double height = 500;
 
-const int max_iterations = 500;
-const double width = 1000;
-const double height = 1000;
-
-struct complexNumber{
-  double real, img;
-};
-
-struct color{
-  Uint8 r, g, b;
-};
-
-double absoluteValue(complex z);
-complex multiplyComplex(complex z1, complex z2);
-complex addComplex(complex z1, complex z2);
-
-complex multiplyComplex(complex z1, complex z2){
-  complex c;
-  c.real = ( z1.real * z2.real ) - ( z1.img * z2.img );
-  c.img = ( z1.real * z2.img ) + ( z1.img * z2.real );
-  return c;
-}
-
-complex addComplex(complex z1, complex z2){
-  complex c;
-  c.real = z1.real + z2.real;
-  c.img = z1.img + z2.img;
-  return c;
-}
 
 /*
 Given a complex number c, calculate the number of iterations needed to achieve a Zn = (Zn-1)^2 + c such that Zn > 2.
@@ -40,37 +13,23 @@ If max_iteration is reached, it is assumed that the sequence will never exceed 2
 int iterations(complex c){
   complex z;
   z.real = 0;
-  z.img = 0;
+  z.imag = 0;
   for(int i = 0; i<max_iterations; i++){
-    z = addComplex( multiplyComplex(z, z), c );
-    if( absoluteValue(z) > 4.0 )
+    z = c_add( c_multiply(z, z), c );
+    if( c_absolute(z) > 4.0 )
       return i;
   }
   return max_iterations;
 }
 
-double absoluteValue(complex z){
-  return (z.real * z.real) + (z.img * z.img);
-}
-
 /*
 
 */
-color getColor(int iterations){
-  color c;
-  if(iterations >= 499){
-    c.r = 0;
-    c.g = 0;
-    c.b = 0;
-
-  }
-  else{
-    c.r = 255;
-    c.g = 255;
-    c.b = 255;
-
-  }
-  return c;
+Uint8 getColor(int iterations){
+  if(iterations >= max_iterations - 1)
+    return 0;
+  else
+    return 255;
 }
 
 int main (int argc, char** argv)
@@ -90,19 +49,15 @@ int main (int argc, char** argv)
     renderer =  SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED);
 
     complex c;
-    color pixel;
-    int iter;
+    int color;
     for(int x = 0; x < width; x++)
       for(int y = 0; y < height; y++){
         //normalize
         c.real = ((double)x - width) / width;
-        c.img = ((double)y - height) / height;
-        //printf("R: %f, I: %f\n", c.real, c.img);
+        c.imag = ((double)y - height) / height;
 
-        iter = iterations(c);
-        //printf("%d", iter);
-        pixel = getColor(iter);
-        SDL_SetRenderDrawColor( renderer, pixel.r, pixel.g, pixel.b, 255 );
+        color = getColor(iterations(c));
+        SDL_SetRenderDrawColor( renderer, color, color, color, 255 );
         SDL_RenderDrawPoint(renderer, x, y);
       }
 
@@ -111,7 +66,7 @@ int main (int argc, char** argv)
     SDL_RenderPresent(renderer);
 
     // Wait for 5 sec
-    SDL_Delay( 10000 );
+    SDL_Delay( 2000 );
     SDL_DestroyWindow(window);
     SDL_Quit();
 
