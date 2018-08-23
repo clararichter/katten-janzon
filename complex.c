@@ -15,6 +15,6 @@ complex c_add(complex z1, complex z2){
 }
 
 
-double c_absolute(complex z){
+double c_squared_modulus(complex z){
   return (z.real * z.real) + (z.imag * z.imag);
 }
